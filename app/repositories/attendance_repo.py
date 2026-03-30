@@ -50,15 +50,15 @@ class AttendanceRepository:
                                        #This is for logging time out
 
 
-    def log_time_out(self, card_uid: str):
+    def log_time_out(self, student_number: str):
         with self.db.get_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute("""
                       UPDATE attendance
                       SET time_out = CURRENT_TIME
-                      WHERE card_uid = %s
+                      WHERE student_number = %s
                       AND at_date = %s
-                      """, (card_uid, date_type.today()))
+                      """, (student_number, date_type.today()))
                 conn.commit()
 
 
@@ -74,14 +74,14 @@ class AttendanceRepository:
 
 
 
-    def has_record_today(self, card_uid: str) -> bool:
+    def has_record_today(self, student_number: str) -> bool:
         with self.db.get_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute("""
                     SELECT id FROM attendance
-                    WHERE card_uid = %s
+                    WHERE student_number = %s
                     AND at_date = %s
-                """, (card_uid, date_type.today()))
+                """, (student_number, date_type.today()))
                 return cursor.fetchone() is not None
 
     # ===============================================================================================================

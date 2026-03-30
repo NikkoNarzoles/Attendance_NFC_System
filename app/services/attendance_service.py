@@ -13,7 +13,7 @@ class AttendanceService:
     # ===============================================================================================================
     # ===============================================================================================================
 
-
+                                    #This is just making time a string
 
     def serialize_attendance(self, attendance_list):
         for record in attendance_list:
@@ -23,26 +23,23 @@ class AttendanceService:
                 record["time_out"] = str(record["time_out"])
         return attendance_list
 
-
-
     # ===============================================================================================================
     # ===============================================================================================================
 
-                             #This is for setting the attendance if only one RFID SCANNER
+                            #This is for logging in when there is two RFID Scanner
 
-
-    def set_attendance(self, card_uid: str):
-        student_info = self.students.get_by_card_uid(card_uid)
+    def set_logged_in(self, student_number: str):
+        student_info = self.students.get_by_student_number(student_number)
 
         if student_info is None:
             return "not registered"
 
-        logged_in_student = self.attendance.has_record_today(card_uid)
+        logged_in_student = self.attendance.has_record_today(student_number)
 
         if not logged_in_student:
             self.attendance.log_time_in(
-                student_number=student_info["student_number"],
-                card_uid=card_uid,
+                student_number=student_number,
+                card_uid=student_info["card_uid"],
                 first_name=student_info["first_name"],
                 last_name=student_info["last_name"],
                 middle_name=student_info["middle_name"],
@@ -52,7 +49,71 @@ class AttendanceService:
             )
             return "successful time-in"
 
-        self.attendance.log_time_out(card_uid)
+        return "already logged in"
+
+
+
+
+    # ===============================================================================================================
+    # ===============================================================================================================
+
+                                # This is for logging out when there is two RFID Scanner
+
+    def set_logged_out(self, student_number: str):
+        student_info = self.students.get_by_student_number(student_number)
+
+        if student_info is None:
+            return "not registered"
+
+        logged_in_student = self.attendance.has_record_today(student_number)
+
+        if not logged_in_student:
+            self.attendance.log_time_in(
+                student_number=student_number,
+                card_uid=student_info["card_uid"],
+                first_name=student_info["first_name"],
+                last_name=student_info["last_name"],
+                middle_name=student_info["middle_name"],
+                suffix=student_info["suffix"],
+                section=student_info["section"],
+                grade_level=student_info["grade_level"]
+            )
+            return "successful time-in"
+
+        self.attendance.log_time_out(student_number)
+        return "successful time-out"
+
+
+
+
+    # ===============================================================================================================
+    # ===============================================================================================================
+
+                             #This is for setting the attendance if only one RFID SCANNER
+
+
+    def set_attendance(self, student_number: str):
+        student_info = self.students.get_by_student_number(student_number)
+
+        if student_info is None:
+            return "not registered"
+
+        logged_in_student = self.attendance.has_record_today(student_number)
+
+        if not logged_in_student:
+            self.attendance.log_time_in(
+                student_number=student_number,
+                card_uid=student_info["card_uid"],
+                first_name=student_info["first_name"],
+                last_name=student_info["last_name"],
+                middle_name=student_info["middle_name"],
+                suffix=student_info["suffix"],
+                section=student_info["section"],
+                grade_level=student_info["grade_level"]
+            )
+            return "successful time-in"
+
+        self.attendance.log_time_out(student_number)
         return "successful time-out"
 
 

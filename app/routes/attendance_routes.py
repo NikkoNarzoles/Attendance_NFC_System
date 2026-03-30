@@ -20,14 +20,27 @@ def create_attendance_routes(service: AttendanceService):
     # ===============================================================================================================
     # ===============================================================================================================
 
+    @attendance_bp.route("/tap/log-in", methods=["POST"])
+    def tap_log_in():
+        data = request.get_json()
+        student_number = data["student_number"]
+        result = service.set_logged_in(student_number)
+        return jsonify({"message": result})
 
 
+    @attendance_bp.route("/tap/log-out", methods=["POST"])
+    def tap_log_out():
+        data = request.get_json()
+        student_number = data["student_number"]
+        result = service.set_logged_out(student_number)
+        return jsonify({"message": result})
 
-    @attendance_bp.route("/tap", methods=["POST"])
+
+    @attendance_bp.route("/manual-log", methods=["POST"])
     def tap():
         data = request.get_json()
-        card_uid = data["card_uid"]
-        result = service.set_attendance(card_uid)
+        student_number = data["student_number"]
+        result = service.set_attendance(student_number)
         return jsonify({"message": result})
 
     # ===============================================================================================================
@@ -70,6 +83,7 @@ def create_attendance_routes(service: AttendanceService):
             return jsonify({"message": result})
         return jsonify(result)
 
+
     # ===============================================================================================================
     # ===============================================================================================================
 
@@ -88,6 +102,9 @@ def create_attendance_routes(service: AttendanceService):
             return jsonify({"message": result})
 
         return jsonify(result)
+
+
+
 
 
 

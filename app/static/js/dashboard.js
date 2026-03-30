@@ -114,11 +114,10 @@ function listAll(studentList){
     tbody.innerHTML += `
             <tr>
                 <td>${student.student_number}</td>
-                <td>${student.card_uid}</td>
                 <td>${student.first_name}</td>
                 <td>${student.last_name}</td>
              <td>
-                <button onclick="selectStudent('${student.card_uid}')">
+                <button onclick="selectStudent('${student.student_number}')">
                     Select
                 </button>
             </td>
@@ -128,13 +127,9 @@ function listAll(studentList){
 }
 
 
-function selectStudent(uid) {
-    verifyStudent(uid);
-}
 
-
-function verifyStudent(uid) {
-       let url = `/attendance/student_list?student_info=${uid}`;
+function selectStudent(student_number) {
+       let url = `/attendance/student_list?student_number=${student_number}`;
 
        fetch(url)
         .then(response => response.json())
@@ -142,7 +137,7 @@ function verifyStudent(uid) {
             if (data.message) {
                 showError("Cannot find student.");
             } else {
-                addManualAttendance(data[0], uid);
+                addManualAttendance(data[0], student_number);
             }
         })
         .catch(() => showError("Cannot find student."));
@@ -150,7 +145,7 @@ function verifyStudent(uid) {
 
 
 
-function addManualAttendance(student, uid) {
+function addManualAttendance(student, student_number) {
     const tbody = document.getElementById("verify-body");
     const table = document.getElementById("verify-table");
 
@@ -159,12 +154,11 @@ function addManualAttendance(student, uid) {
 
     tbody.innerHTML = `
         <tr>
-            <td>${student.card_uid}</td>
             <td>${student.student_number}</td>
             <td>${student.first_name}</td>
             <td>${student.last_name}</td>
             <td>
-                <button onclick="confirmAttendance('${uid}')">Yes</button>
+                <button onclick="confirmAttendance('${student_number}')">Yes</button>
             </td>
             <td>
                 <button onclick="cancelAttendance()">Cancel</button>
@@ -175,18 +169,18 @@ function addManualAttendance(student, uid) {
 
 
 
-function confirmAttendance(uid) {
-    fetch("/tap", {
+function confirmAttendance(student_number) {
+    fetch("/manual-log", {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
         },
-        body: JSON.stringify({ card_uid: uid })  // same format your Flask /tap expects
+        body: JSON.stringify({ student_number: student_number })
     })
     .then(response => response.json())
     .then(data => {
-        alert(data.message);       // shows "successful time-in" or "successful time-out"
-        cancelAttendance();        // hide the confirmation table after
+        alert(data.message);
+        cancelAttendance();
     })
     .catch(() => showError("Failed to record attendance."));
 }
@@ -227,7 +221,6 @@ function renderTable(records) {
 
         tbody.innerHTML += `
                     <tr>
-                        <td>${record.card_uid}</td>
                         <td>${record.student_number}</td>
                         <td>${record.first_name} ${record.last_name}</td>
                         <td>${record.at_date}</td>

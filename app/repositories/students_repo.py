@@ -16,6 +16,16 @@ class StudentRepository:
 
 
 
+# This is for getting the student by student_number
+    def get_by_student_number(self, student_number: str):
+        with self.db.get_connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute("""
+                               SELECT * FROM students
+                                WHERE student_number = %s """, (student_number,))
+                return cursor.fetchone()
+
+
 
 #This is for getting the student by student info
     def search_by_student_info(self, first_name=None, last_name=None, student_number=None):
@@ -24,7 +34,6 @@ class StudentRepository:
 
                 conditions = []
                 values = []
-
 
                 if student_number:
                     conditions.append("student_number ILIKE %s")
