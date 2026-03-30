@@ -8,7 +8,6 @@ function updateDateTime() {
             day: "numeric",
             hour: "2-digit",
             minute: "2-digit",
-            second: "2-digit",
             hour12: true
         });
 }
@@ -20,6 +19,11 @@ setInterval(updateDateTime, 1000);
 
 // Load attendance when page opens
 loadAttendance();
+
+
+let totalPresent = 0;
+
+
 
 // ─── Load attendance by date and order ───────────────────────────────────────
 function loadAttendance() {
@@ -35,12 +39,12 @@ function loadAttendance() {
             if (data.message) {
                 showNoRecords();
             } else {
-                renderTable(data);
+                totalPresent = data.length;
+                renderTable(data, false);
             }
         })
         .catch(() => showError("Failed to load attendance."));
 }
-
 
 
 // ─── Search attendance ────────────────────────────────────────────────────────
@@ -181,11 +185,10 @@ function confirmAttendance(student_number) {
     .then(data => {
         alert(data.message);
         cancelAttendance();
+        loadAttendance()
     })
     .catch(() => showError("Failed to record attendance."));
 }
-
-
 
 
 function cancelAttendance() {
@@ -201,7 +204,7 @@ function cancelAttendance() {
 
 // ─── Render table ─────────────────────────────────────────────────────────────
 
-function renderTable(records) {
+function renderTable(records, isFiltered = false) {
     const tbody = document.getElementById("attendance-body");
     const table = document.getElementById("attendance-table");
     const noRecords = document.getElementById("no-records");
@@ -210,7 +213,6 @@ function renderTable(records) {
     table.classList.remove("hidden");
     noRecords.classList.add("hidden");
 
-    let totalCount = records.length;
     let timedOutCount = 0;
     let stillInCount = 0;
 
@@ -220,20 +222,19 @@ function renderTable(records) {
         else timedOutCount++;
 
         tbody.innerHTML += `
-                    <tr>
-                        <td>${record.student_number}</td>
-                        <td>${record.first_name} ${record.last_name}</td>
-                        <td>${record.at_date}</td>
-                        <td>${record.time_in}</td>
-                        <td>${record.time_out ?? "—"}</td>
-                        <td class="${isStillIn ? 'status-in' : 'status-out'}">
-                            ${isStillIn ? "Still Inside" : "Timed Out"}
-                        </td>
-                    </tr>
-                `;
+            <tr>
+                <td>${record.student_number}</td>
+                <td>${record.first_name} ${record.last_name}</td>
+                <td>${record.at_date}</td>
+                <td>${record.time_in}</td>
+                <td>${record.time_out ?? "—"}</td>
+                <td class="${isStillIn ? 'status-in' : 'status-out'}">
+                    ${isStillIn ? "Still Inside" : "Timed Out"}
+                </td>
+            </tr>
+        `;
     });
-
-    document.getElementById("total-count").textContent = totalCount;
+    document.getElementById("total-count").textContent = totalPresent;
     document.getElementById("timed-out-count").textContent = timedOutCount;
     document.getElementById("still-in-count").textContent = stillInCount;
 }
@@ -254,6 +255,8 @@ function showNoRecords() {
     document.getElementById("still-in-count").textContent = 0;
 }
 
+
+
 function showError(message) {
     const el = document.getElementById("status-message");
     el.textContent = message;
@@ -261,6 +264,31 @@ function showError(message) {
     setTimeout(() => el.classList.add("hidden"), 3000);
 }
 
+
+function filterStillIn() {
+    const order = document.getElementById("order-select").value;
+    const date = document.getElementById("search-date").value;
+
+    let url = `/attendance?order_clause=${order}`;
+    if (date) url += `&at_date=${date}`;
+
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            if (data.message) {
+                showNoRecords();
+            } else {
+                totalPresent = data.length; // still save the real total
+                const stillInOnly = data.filter(record => !record.time_out);
+                if (stillInOnly.length === 0) {
+                    showNoRecords();
+                } else {
+                    renderTable(stillInOnly, true); // pass true = is filtered
+                }
+            }
+        })
+        .catch(() => showError("Failed to filter attendance."));
+}
 
 
 
@@ -282,3 +310,5 @@ document.getElementById("reset-btn").addEventListener("click", () => {
 
 
 document.getElementById("order-select").addEventListener("change", loadAttendance);
+document.getElementById("still-in-btn").addEventListener("click", filterStillIn);
+document.getElementById("show-all-btn").addEventListener("click", loadAttendance);

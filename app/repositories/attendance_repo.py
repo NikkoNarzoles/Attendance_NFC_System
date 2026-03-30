@@ -94,7 +94,34 @@ class AttendanceRepository:
 
 
 
-    def get_attendance_date(self, at_date, order_clause = None):
+    def get_attendance_date_limit(self, at_date, order_clause = None):
+
+        order_clause = ALLOWED_ORDERS.get(order_clause, "a.time_in DESC")
+
+        with self.db.get_connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute("""
+                    SELECT 
+                        s.card_uid,
+                        s.student_number,
+                        s.first_name,
+                        s.last_name,
+                        TO_CHAR(a.at_date, 'YYYY-MM-DD') AS at_date,
+                        TO_CHAR(a.time_in, 'HH24:MI') AS time_in,
+                        CASE 
+                            WHEN a.time_out IS NULL THEN NULL
+                            ELSE TO_CHAR(a.time_out, 'HH24:MI')
+                        END AS time_out
+                    FROM attendance a
+                    JOIN students s ON a.student_number = s.student_number
+                    WHERE a.at_date::date = %s
+                    ORDER BY """ + order_clause + """
+                    LIMIT 14
+                """, (at_date,))
+                return cursor.fetchall()
+
+
+    def get_attendance_all_limit(self, at_date, order_clause = None):
 
         order_clause = ALLOWED_ORDERS.get(order_clause, "a.time_in DESC")
 

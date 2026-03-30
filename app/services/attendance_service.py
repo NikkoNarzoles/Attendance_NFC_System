@@ -128,7 +128,7 @@ class AttendanceService:
         if at_date is None:
             at_date = date_type.today()
 
-        attendance_list = self.attendance.get_attendance_date(at_date, order_clause)
+        attendance_list = self.attendance.get_attendance_date_limit(at_date, order_clause)
 
         if not attendance_list:
             return "no records"
