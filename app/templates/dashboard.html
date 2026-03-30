@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NFC Attendance System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+</head>
+<body>
+
+    <div class="container">
+
+        <div class="header">
+            <h1>Attendance Dashboard</h1>
+            <p id="current-datetime"></p>
+        </div>
+
+        <div class="controls">
+            <input type="text" id="search-first-name" placeholder="Search by first name...">
+            <input type="text" id="search-last-name" placeholder="Search by last name...">
+            <input type="text" id="search-number" placeholder="Search by student number...">
+            <input type="date" id="search-date">
+
+
+            <select id="order-select">
+                <option value="time_in_desc">Time In (Latest)</option>
+                <option value="time_in_asc">Time In (Earliest)</option>
+                <option value="last_name_asc">Last Name (A-Z)</option>
+                <option value="last_name_desc">Last Name (Z-A)</option>
+                <option value="student_number_desc">Student Number</option>
+            </select>
+
+            <button id="search-btn">Search</button>
+            <button id="reset-btn">Reset</button>
+            <button id="student-list">Student List</button>
+        </div>
+
+        <div class="summary">
+            <div class="summary-card">
+                <span id="total-count">0</span>
+                <label>Total Present</label>
+            </div>
+            <div class="summary-card">
+                <span id="timed-out-count">0</span>
+                <label>Timed Out</label>
+            </div>
+            <div class="summary-card">
+                <span id="still-in-count">0</span>
+                <label>Still Inside</label>
+            </div>
+        </div>
+
+        <div id="status-message" class="status-message hidden"></div>
+
+        <table id="attendance-table">
+            <thead>
+                <tr>
+                    <th>Card UID</th>
+                    <th>Student Number</th>
+                    <th>Name</th>
+                    <th>Date</th>
+                    <th>Time In</th>
+                    <th>Time Out</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody id="attendance-body">
+            </tbody>
+        </table>
+
+        <div id="no-records" class="no-records hidden">
+            No attendance records found.
+        </div>
+
+
+
+        <table id="student-table">
+            <thead>
+                <tr>
+                    <th>Student Number</th>
+                    <th>Card UID</th>
+                    <th>First Name</th>
+                    <th>Last Name</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody id="student-body">
+            </tbody>
+        </table>
+
+
+        <table id="verify-table" class="hidden">
+            <thead>
+                <tr>
+                    <th>Card UID</th>
+                    <th>Student Number</th>
+                    <th>First Name</th>
+                    <th>Last Name</th>
+                    <th>Confirm</th>
+                    <th>Cancel</th>
+                </tr>
+            </thead>
+            <tbody id="verify-body"></tbody>
+        </table>
+
+
+    </div>
+
+    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+
+</body>
+</html>

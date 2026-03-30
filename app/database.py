@@ -28,13 +28,18 @@ class Database:
             with conn.cursor() as cursor:
                 cursor.execute("""
                     CREATE TABLE IF NOT EXISTS attendance (
-                        id SERIAL PRIMARY KEY,
+                        id             SERIAL PRIMARY KEY,
                         student_number VARCHAR(20) NOT NULL,
-                        card_uid VARCHAR(20) NOT NULL,
-                        at_date DATE DEFAULT CURRENT_DATE,
-                        time_in TIME DEFAULT CURRENT_TIME,
-                        time_out TIME NULL,                       
-                        FOREIGN KEY (student_number) REFERENCES students(student_number)
+                        card_uid       VARCHAR(20) NOT NULL,
+                        first_name     VARCHAR(50) NOT NULL,
+                        last_name      VARCHAR(50) NOT NULL,
+                        middle_name    VARCHAR(50) NULL,
+                        suffix         VARCHAR(20) NULL,
+                        section        VARCHAR(20) NOT NULL,
+                        grade_level    VARCHAR(20) NOT NULL,
+                        at_date        DATE DEFAULT CURRENT_DATE,
+                        time_in        TIME DEFAULT CURRENT_TIME,
+                        time_out       TIME NULL
                     );
                 """)
             conn.commit()
