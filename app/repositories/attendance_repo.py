@@ -116,12 +116,12 @@ class AttendanceRepository:
                     JOIN students s ON a.student_number = s.student_number
                     WHERE a.at_date::date = %s
                     ORDER BY """ + order_clause + """
-                    LIMIT 14
+                    LIMIT 10
                 """, (at_date,))
                 return cursor.fetchall()
 
 
-    def get_attendance_all_limit(self, at_date, order_clause = None):
+    def get_attendance_all(self, at_date, order_clause = None):
 
         order_clause = ALLOWED_ORDERS.get(order_clause, "a.time_in DESC")
 

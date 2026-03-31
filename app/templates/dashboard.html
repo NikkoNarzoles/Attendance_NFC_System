@@ -4,106 +4,176 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NFC Attendance System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
 </head>
 <body>
 
     <div class="container">
 
-        <div class="header">
-            <h1>Attendance Dashboard</h1>
-            <p id="current-datetime"></p>
-        </div>
-
-        <div class="controls">
-            <input type="text" id="search-first-name" placeholder="Search by first name...">
-            <input type="text" id="search-last-name" placeholder="Search by last name...">
-            <input type="text" id="search-number" placeholder="Search by student number...">
-            <input type="date" id="search-date">
-
-
-            <select id="order-select">
-                <option value="time_in_desc">Time In (Latest)</option>
-                <option value="time_in_asc">Time In (Earliest)</option>
-                <option value="last_name_asc">Last Name (A-Z)</option>
-                <option value="last_name_desc">Last Name (Z-A)</option>
-                <option value="student_number_desc">Student Number</option>
-            </select>
-
-            <button id="search-btn">Search</button>
-            <button id="reset-btn">Reset</button>
-            <button id="student-list">Student List</button>
-        </div>
+        <nav>
+            <div class="header">
+                <h1>Attendance Dashboard</h1>
+                <p id="current-datetime"></p>
+            </div>
+            <div class="logo">EECP</div>
+        </nav>
 
         <div class="summary">
-            <div class="summary-card">
-                <span id="total-count">0</span>
-                <label>Total Present</label>
-            </div>
-            <div class="summary-card">
-                <span id="timed-out-count">0</span>
-                <label>Timed Out</label>
-            </div>
-            <div class="summary-card">
-                <span id="still-in-count">0</span>
-                <label>Still Inside</label>
+            <div class="white-title">Today's</div>
+            <div class="title">Attendance Summary</div>
+            <div class="small-title">Shows all needed information in quick glance.</div>
+
+            <div class="summary-top">
+                <div class="summary-card">
+                    <span id="total-count">0</span>
+                    <label>Total Present</label>
+                </div>
+                <div class="summary-card">
+                    <span id="timed-out-count">0</span>
+                    <label>Timed Out</label>
+                </div>
+                <div class="summary-card">
+                    <span id="still-in-count">0</span>
+                    <label>Still Inside</label>
+                </div>
             </div>
 
-            <button id="still-in-btn">Still Inside</button>
-            <button id="show-all-btn">Show All</button>
-
+            <div class="summary-bot">
+                <div class="but-left">
+                    <button id="still-in-btn">Still Inside</button>
+                    <button id="show-all-btn">Show All</button>
+                </div>
+                <button id="reset-btn">Refresh</button>
+            </div>
         </div>
 
-        <div id="status-message" class="status-message hidden"></div>
+        <main>
 
-        <table id="attendance-table">
-            <thead>
-                <tr>
-                    <th>Student Number</th>
-                    <th>Name</th>
-                    <th>Date</th>
-                    <th>Time In</th>
-                    <th>Time Out</th>
-                    <th>Status</th>
-                </tr>
-            </thead>
-            <tbody id="attendance-body">
-            </tbody>
-        </table>
+            <div class="controls">
+                <div class="name">
+                    <div>Search</div>
+                    <i class="fa fa-search icon"></i>
+                </div>
 
-        <div id="no-records" class="no-records hidden">
-            No attendance records found.
+                <div class="input-group">
+                    <label for="search-first-name">First Name</label>
+                    <input type="text" id="search-first-name" placeholder="Search by first name...">
+                </div>
+
+                <div class="input-group">
+                    <label for="search-last-name">Last Name</label>
+                    <input type="text" id="search-last-name" placeholder="Search by last name...">
+                </div>
+
+                <div class="input-group">
+                    <label for="search-number">Student Number</label>
+                    <input type="text" id="search-number" placeholder="Search by student number...">
+                </div>
+
+                <div class="input-group">
+                    <label for="search-date">Date</label>
+                    <input type="date" id="search-date">
+                </div>
+
+                <div class="input-group">
+                    <label for="order-select">Sort By</label>
+                    <select id="order-select" class="custom-select">
+                        <option value="time_in_desc">Time In (Latest)</option>
+                        <option value="time_in_asc">Time In (Earliest)</option>
+                        <option value="last_name_asc">Last Name (A-Z)</option>
+                        <option value="last_name_desc">Last Name (Z-A)</option>
+                        <option value="student_number_desc">Student Number</option>
+                    </select>
+                </div>
+
+                <div class="search-buttons">
+                    <button id="search-btn">Search from Attendance</button>
+                    <button id="student-list">Search from Students' List</button>
+                </div>
+            </div>
+
+
+            <div class="table-container">
+
+                <!-- LAYER 3: Verify / Confirm Student -->
+                <div id="verify-table" class="third_layer hidden">
+                    <div class="box">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th colspan="2">Student Information</th>
+                                </tr>
+                            </thead>
+                            <tbody id="verify-body"></tbody>
+                        </table>
+
+                        <div class="confirm-buttons">
+                            <button onclick="showLayer('second_layer')" id="back-but-verify">Back</button>
+                            <button id="manual-log-btn">Log In/Out</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- LAYER 2: Student List -->
+                <div id="student-table" class="second_layer hidden">
+
+
+                    <div class="student-table-container">
+                        <table id="student-table-part">
+                            <thead>
+                                <tr>
+                                    <th>Student Number</th>
+                                    <th>First Name</th>
+                                    <th>Last Name</th>
+                                    <th>Manual Log</th>
+                                </tr>
+                            </thead>
+                            <tbody id="student-body"></tbody>
+                        </table>
+                    </div>
+
+                    <div class="back-back">
+                        <button onclick="showLayer('first_layer')" id="back-but-student">Back</button>
+                    </div>
+                </div>
+
+                <!-- LAYER 1: Attendance Table -->
+                <table id="attendance-table" class="first_layer hidden">
+                    <thead>
+                        <tr>
+                            <th>Student Number</th>
+                            <th>Name</th>
+                            <th>Date</th>
+                            <th>Time In</th>
+                            <th>Time Out</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="attendance-body"></tbody>
+                </table>
+
+                <div id="no-records" class="no-records hidden">
+                    No attendance records found.
+                </div>
+
+            </div>
+
+        </main>
+
+        <!-- Toast Notification -->
+        <div id="toast" class="toast toast-hidden">
+            <div class="toast-left">
+                <span id="toast-icon" class="toast-icon"></span>
+                <span id="toast-message" class="toast-message"></span>
+            </div>
+            <button class="toast-close" onclick="dismissToast()">
+                <i class="fa fa-times"></i>
+            </button>
+            <div id="toast-bar" class="toast-bar"></div>
         </div>
-
-
-
-        <table id="student-table">
-            <thead>
-                <tr>
-                    <th>Student Number</th>
-                    <th>First Name</th>
-                    <th>Last Name</th>
-                    <th>Manual Log</th>
-                </tr>
-            </thead>
-            <tbody id="student-body">
-            </tbody>
-        </table>
-
-
-        <table id="verify-table" class="hidden">
-            <thead>
-                <tr>
-                    <th>Student Number</th>
-                    <th>First Name</th>
-                    <th>Last Name</th>
-                    <th>Confirm</th>
-                    <th>Cancel</th>
-                </tr>
-            </thead>
-            <tbody id="verify-body"></tbody>
-        </table>
-
 
     </div>
 

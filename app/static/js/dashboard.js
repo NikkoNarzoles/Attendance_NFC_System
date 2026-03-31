@@ -1,4 +1,5 @@
-// Set today's date in the header
+// ─── Date / Time ─────────────────────────────────────────────────────────────
+
 function updateDateTime() {
     document.getElementById("current-datetime").textContent =
         new Date().toLocaleString("en-PH", {
@@ -12,20 +13,29 @@ function updateDateTime() {
         });
 }
 
-
-updateDateTime();                        // run once immediately
+updateDateTime();
 setInterval(updateDateTime, 1000);
 
 
-// Load attendance when page opens
-loadAttendance();
+// ─── Layer switching ──────────────────────────────────────────────────────────
 
+function showLayer(className) {
+    const layers = document.querySelectorAll('.first_layer, .second_layer, .third_layer');
+    layers.forEach(layer => layer.classList.add("hidden"));
+
+    const target = document.querySelector('.' + className);
+    if (target) target.classList.remove("hidden");
+}
+
+
+// ─── State ────────────────────────────────────────────────────────────────────
 
 let totalPresent = 0;
-
+let selectedStudentNumber = null;
 
 
 // ─── Load attendance by date and order ───────────────────────────────────────
+
 function loadAttendance() {
     const order = document.getElementById("order-select").value;
     const date = document.getElementById("search-date").value;
@@ -41,6 +51,7 @@ function loadAttendance() {
             } else {
                 totalPresent = data.length;
                 renderTable(data, false);
+                showLayer('first_layer');
             }
         })
         .catch(() => showError("Failed to load attendance."));
@@ -69,73 +80,66 @@ function searchAttendance() {
                 showNoRecords();
             } else {
                 renderTable(data);
+                showLayer('first_layer');
             }
         })
         .catch(() => showError("Failed to search attendance."));
 }
 
 
+// ─── Student list (Layer 2) ───────────────────────────────────────────────────
 
-
-function studentList(){
+function studentList() {
     const first_name = document.getElementById("search-first-name").value;
     const last_name = document.getElementById("search-last-name").value;
     const number = document.getElementById("search-number").value;
 
     let url = `/attendance/student_list?`;
-
-    if (first_name)
-        url += `first_name=${encodeURIComponent(first_name)}&`;
-
-    if (last_name)
-        url += `last_name=${encodeURIComponent(last_name)}&`;
-
-    if (number)
-        url += `student_number=${encodeURIComponent(number)}`;
+    if (first_name) url += `first_name=${encodeURIComponent(first_name)}&`;
+    if (last_name) url += `last_name=${encodeURIComponent(last_name)}&`;
+    if (number) url += `student_number=${encodeURIComponent(number)}`;
 
     fetch(url)
         .then(response => response.json())
         .then(data => {
             if (data.message) {
-                showNoRecords();
+                showError("No students found.");
             } else {
                 listAll(data);
+                showLayer('second_layer'); // ← switch to layer 2 after data loads
             }
         })
         .catch(() => showError("Failed to load student list."));
 }
 
 
-
-function listAll(studentList){
+function listAll(students) {
     const tbody = document.getElementById("student-body");
-    const table = document.getElementById("student-table");
-
     tbody.innerHTML = "";
-    table.classList.remove("hidden");
 
-    studentList.forEach(student =>{
-    tbody.innerHTML += `
+    students.forEach(student => {
+        tbody.innerHTML += `
             <tr>
                 <td>${student.student_number}</td>
                 <td>${student.first_name}</td>
                 <td>${student.last_name}</td>
-             <td>
-                <button onclick="selectStudent('${student.student_number}')">
-                    Select
-                </button>
-            </td>
+                <td>
+                    <button class="select" onclick="selectStudent('${student.student_number}')">
+                        Select
+                    </button>
+                </td>
             </tr>
         `;
     });
 }
 
 
+// ─── Select student → Layer 3 ─────────────────────────────────────────────────
 
 function selectStudent(student_number) {
-       let url = `/attendance/student_list?student_number=${student_number}`;
+    let url = `/attendance/student_list?student_number=${student_number}`;
 
-       fetch(url)
+    fetch(url)
         .then(response => response.json())
         .then(data => {
             if (data.message) {
@@ -148,69 +152,56 @@ function selectStudent(student_number) {
 }
 
 
-
 function addManualAttendance(student, student_number) {
+    selectedStudentNumber = student_number;
+
     const tbody = document.getElementById("verify-body");
-    const table = document.getElementById("verify-table");
-
-    tbody.innerHTML = "";
-    table.classList.remove("hidden");
-
     tbody.innerHTML = `
         <tr>
+            <td>Student Number</td>
             <td>${student.student_number}</td>
+        </tr>
+        <tr>
+            <td>First Name</td>
             <td>${student.first_name}</td>
+        </tr>
+        <tr>
+            <td>Last Name</td>
             <td>${student.last_name}</td>
-            <td>
-                <button onclick="confirmAttendance('${student_number}')">Yes</button>
-            </td>
-            <td>
-                <button onclick="cancelAttendance()">Cancel</button>
-            </td>
         </tr>
     `;
+
+    showLayer('third_layer'); // ← switch to layer 3
 }
 
 
+// ─── Confirm / Cancel manual attendance ──────────────────────────────────────
 
-function confirmAttendance(student_number) {
+function confirmAttendance() {
+    if (!selectedStudentNumber) return;
+
     fetch("/manual-log", {
         method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ student_number: student_number })
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ student_number: selectedStudentNumber })
     })
     .then(response => response.json())
     .then(data => {
-        alert(data.message);
-        cancelAttendance();
-        loadAttendance()
+        selectedStudentNumber = null;
+        showToast(data.message, "success");
+        loadAttendance();
     })
-    .catch(() => showError("Failed to record attendance."));
+    .catch(() => showToast("Failed to record attendance.", "error"));
 }
 
 
-function cancelAttendance() {
-    const table = document.getElementById("verify-table");
-    const tbody = document.getElementById("verify-body");
-    tbody.innerHTML = "";
-    table.classList.add("hidden");
-}
-
-
-
-
-
-// ─── Render table ─────────────────────────────────────────────────────────────
+// ─── Render attendance table ──────────────────────────────────────────────────
 
 function renderTable(records, isFiltered = false) {
     const tbody = document.getElementById("attendance-body");
-    const table = document.getElementById("attendance-table");
     const noRecords = document.getElementById("no-records");
 
     tbody.innerHTML = "";
-    table.classList.remove("hidden");
     noRecords.classList.add("hidden");
 
     let timedOutCount = 0;
@@ -234,36 +225,84 @@ function renderTable(records, isFiltered = false) {
             </tr>
         `;
     });
+
     document.getElementById("total-count").textContent = totalPresent;
     document.getElementById("timed-out-count").textContent = timedOutCount;
     document.getElementById("still-in-count").textContent = stillInCount;
 }
 
 
-
-
-
-
-// ─── Helper functions ─────────────────────────────────────────────────────────
+// ─── Helper: no records ───────────────────────────────────────────────────────
 
 function showNoRecords() {
     document.getElementById("attendance-body").innerHTML = "";
-    document.getElementById("attendance-table").classList.add("hidden");
     document.getElementById("no-records").classList.remove("hidden");
     document.getElementById("total-count").textContent = 0;
     document.getElementById("timed-out-count").textContent = 0;
     document.getElementById("still-in-count").textContent = 0;
+    showLayer('first_layer');
 }
 
 
+// ─── Toast notification system ────────────────────────────────────────────────
 
+let toastTimer = null;
+
+function showToast(message, type = "success") {
+    const toast = document.getElementById("toast");
+    const toastIcon = document.getElementById("toast-icon");
+    const toastMsg = document.getElementById("toast-message");
+    const toastBar = document.getElementById("toast-bar");
+
+    // Clear any existing timer
+    if (toastTimer) clearTimeout(toastTimer);
+
+    // Set content
+    toastMsg.textContent = message;
+    toast.className = "toast toast-" + type;
+
+    // Set icon
+    if (type === "success") {
+        toastIcon.innerHTML = `<i class="fa fa-check-circle"></i>`;
+    } else {
+        toastIcon.innerHTML = `<i class="fa fa-times-circle"></i>`;
+    }
+
+    // Show
+    toast.classList.remove("toast-hidden");
+    toast.classList.add("toast-visible");
+
+    // Animate progress bar
+    toastBar.style.transition = "none";
+    toastBar.style.width = "100%";
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            toastBar.style.transition = "width 4s linear";
+            toastBar.style.width = "0%";
+        });
+    });
+
+    // Auto-dismiss after 4s
+    toastTimer = setTimeout(() => dismissToast(), 4000);
+}
+
+function dismissToast() {
+    const toast = document.getElementById("toast");
+    toast.classList.remove("toast-visible");
+    toast.classList.add("toast-hidden");
+    if (toastTimer) {
+        clearTimeout(toastTimer);
+        toastTimer = null;
+    }
+}
+
+// Keep old showError as alias so nothing breaks
 function showError(message) {
-    const el = document.getElementById("status-message");
-    el.textContent = message;
-    el.className = "status-message status-error";
-    setTimeout(() => el.classList.add("hidden"), 3000);
+    showToast(message, "error");
 }
 
+
+// ─── Filter: still inside ─────────────────────────────────────────────────────
 
 function filterStillIn() {
     const order = document.getElementById("order-select").value;
@@ -278,19 +317,18 @@ function filterStillIn() {
             if (data.message) {
                 showNoRecords();
             } else {
-                totalPresent = data.length; // still save the real total
+                totalPresent = data.length;
                 const stillInOnly = data.filter(record => !record.time_out);
                 if (stillInOnly.length === 0) {
                     showNoRecords();
                 } else {
-                    renderTable(stillInOnly, true); // pass true = is filtered
+                    renderTable(stillInOnly, true);
+                    showLayer('first_layer');
                 }
             }
         })
         .catch(() => showError("Failed to filter attendance."));
 }
-
-
 
 
 // ─── Button events ────────────────────────────────────────────────────────────
@@ -308,7 +346,12 @@ document.getElementById("reset-btn").addEventListener("click", () => {
     loadAttendance();
 });
 
-
 document.getElementById("order-select").addEventListener("change", loadAttendance);
 document.getElementById("still-in-btn").addEventListener("click", filterStillIn);
 document.getElementById("show-all-btn").addEventListener("click", loadAttendance);
+document.getElementById("search-date").addEventListener("click", function () { this.showPicker(); });
+
+// Wire up the manual log confirm button
+document.getElementById("manual-log-btn").addEventListener("click", confirmAttendance);
+
+loadAttendance();

@@ -68,6 +68,6 @@ class StudentRepository:
                 cursor.execute(f"""
                     SELECT * FROM students
                     WHERE {where_clause} 
-                    LIMIT 14""", values)
+                    LIMIT 6""", values)
 
                 return cursor.fetchall()
